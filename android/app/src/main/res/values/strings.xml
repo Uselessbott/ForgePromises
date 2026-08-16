@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">ForgePromises</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">dark</string>
+  <string name="glance_progress_description" translatable="false">Circular progress ring - tap to open app</string>
+  <string name="glance_tasks_description" translatable="false">Today\'s task list - scrollable, tap to open app</string>
+  <string name="glance_combined_description" translatable="false">Progress + tasks</string>
+  <string name="glance_heatmap_description" translatable="false">GitHub-style completion history</string>
+</resources>

@@ -1,0 +1,115 @@
+{
+  root: [32m'X:\\artifacts\\mobile'[39m,
+  reactNativePath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native'[39m,
+  dependencies: [Object: null prototype] {
+    expo: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\expo'[39m,
+      name: [32m'expo'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\expo\\Expo.podspec'[39m,
+          version: [32m'54.0.35'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'@react-native-async-storage/async-storage'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\@react-native-async-storage\\async-storage'[39m,
+      name: [32m'@react-native-async-storage/async-storage'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\@react-native-async-storage\\async-storage\\RNCAsyncStorage.podspec'[39m,
+          version: [32m'2.2.0'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-gesture-handler'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-gesture-handler'[39m,
+      name: [32m'react-native-gesture-handler'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-gesture-handler\\RNGestureHandler.podspec'[39m,
+          version: [32m'2.28.0'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-keyboard-controller'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-keyboard-controller'[39m,
+      name: [32m'react-native-keyboard-controller'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-keyboard-controller\\react-native-keyboard-controller.podspec'[39m,
+          version: [32m'1.18.5'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-reanimated'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-reanimated'[39m,
+      name: [32m'react-native-reanimated'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-reanimated\\RNReanimated.podspec'[39m,
+          version: [32m'4.1.7'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-safe-area-context'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-safe-area-context'[39m,
+      name: [32m'react-native-safe-area-context'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-safe-area-context\\react-native-safe-area-context.podspec'[39m,
+          version: [32m'5.6.2'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-screens'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-screens'[39m,
+      name: [32m'react-native-screens'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-screens\\RNScreens.podspec'[39m,
+          version: [32m'4.16.0'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-svg'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-svg'[39m,
+      name: [32m'react-native-svg'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-svg\\RNSVG.podspec'[39m,
+          version: [32m'15.12.1'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    },
+    [32m'react-native-worklets'[39m: {
+      root: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-worklets'[39m,
+      name: [32m'react-native-worklets'[39m,
+      platforms: {
+        ios: {
+          podspecPath: [32m'C:\\FP\\artifacts\\mobile\\node_modules\\react-native-worklets\\RNWorklets.podspec'[39m,
+          version: [32m'0.5.1'[39m,
+          configurations: [],
+          scriptPhases: []
+        }
+      }
+    }
+  },
+  project: { ios: { sourceDir: [32m'X:\\artifacts\\mobile\\ios'[39m } }
+}

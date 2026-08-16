@@ -1,0 +1,251 @@
+344:  async function refreshWidget(
+345-    habitsOverride?: Habit[],
+346-    logsOverride?: HabitLog[],
+347-    todayTasksOverride?: TodayTask[],
+348-    settingsOverride?: AppSettings
+349-  ) {
+350-    if (Platform.OS !== 'android') return;
+351-    try {
+352-
+353-    const h = habitsOverride ?? habits;
+354-    const l = logsOverride ?? logs;
+355-    const tt = todayTasksOverride ?? todayTasks;
+356-    const currentSettings = settingsOverride ?? settings;
+357-    const today = getTodayStr();
+358-    const scheduled = h.filter(hb => !hb.archived && isHabitScheduledForDate(hb, today));
+359-    const total = scheduled.length;
+360-
+361-    const habitList = scheduled.map(hb => ({
+362-      id: hb.id,
+363-      name: hb.name,
+364-      priority: hb.priority || 'optional',
+365-      completed: l.some(log =>
+366-        log.habitId === hb.id &&
+367-        log.date === today &&
+368-        (log.status === 'completed' || log.status === 'frozen')
+369-      ),
+370-    }));
+371-
+372-    const completed = habitList.filter(hb => hb.completed).length;
+373-    const remaining = total - completed;
+374-
+375-    // Use the fresh h/l override values directly via getCurrentStreak,
+376-    // NOT the local getStreakData() wrapper - that wrapper closes over the
+377-    // component's habits/logs React state, which has not yet committed at
+378-    // this point (refreshWidget is called synchronously right after
+379-    // setHabits/setLogs, before React re-renders). Using the stale closure
+380-    // here caused the streak number to disagree with the heatmap/completion
+381-    // count, which are computed from the fresh override values below.
+382-    let streak = 0;
+383-    scheduled.forEach(hb => {
+384-      const current = getCurrentStreak(hb, l);
+385-      if (current > streak) streak = current;
+386-    });
+387-
+388-    const heatmapWeeks = 10;
+389-    const heatmapDays = heatmapWeeks * 7;
+390-    const historyStart = addDays(today, -(heatmapDays - 1));
+391-    const history: { date: string; pct: number; hasData: boolean }[] = [];
+392-
+393-    for (let i = 0; i < heatmapDays; i++) {
+394-      const ds = addDays(historyStart, i);
+395-      const scheduledForDay = h.filter(hb => !hb.archived && isHabitScheduledForDate(hb, ds));
+396-
+397-      let totalWorkUnits = 0;
+398-      let completedWorkUnits = 0;
+399-
+400-      scheduledForDay.forEach(hb => {
+401-        const log = l.find(
+402-          lg => lg.habitId === hb.id && lg.date === ds
+403-        );
+404-
+405-        const work = getHabitWorkUnits(hb, log);
+406-
+407-        totalWorkUnits += work.total;
+408-        completedWorkUnits += work.completed;
+409-      });
+410-
+411-      history.push({
+412-        date: ds,
+413-        pct: totalWorkUnits > 0 ? completedWorkUnits / totalWorkUnits : 0,
+414-        hasData: totalWorkUnits > 0,
+415-      });
+416-    }
+417-
+418-    // Write the snapshot to native DataStore, consumed by the Glance
+419-    // widgets. Fire-and-forget with a caught rejection: a failed snapshot
+420-    // write should never break the React Native app.
+421-    try {
+422-      const promiseHabits = scheduled.filter(hb => hb.priority === PROMISE_PRIORITY);
+423-      const promisesCompleted = promiseHabits.filter(hb =>
+424-        habitList.find(hl => hl.id === hb.id)?.completed
+425-      ).length;
+426-      const promisesTotal = promiseHabits.length;
+427-
+428-      const snapshot = {
+429-        version: 1,
+430-        theme: currentSettings.theme,
+431-        accentColor: (currentSettings as any).accentColor ?? 'orange',
+432-        updatedAt: new Date().toISOString(),
+433-        today,
+434-        completed,
+435-        total,
+436-        remaining,
+437-        streak,
+438-        habits: habitList,
+439-        todayTasks: tt.map(t => ({
+440-          id: t.id,
+441-          title: t.title,
+442-          completed: t.completed,
+443-        })),
+444-        heatmap: history,
+445-        promisesCompleted,
+446-        promisesTotal,
+447-        hasDailyPromise: hasDailyPromise(),
+448-        selectedPromiseName: getDailyPromise()?.name,
+449-        selectedPromiseCompleted: isDailyPromiseCompleted(),
+450-      };
+451-      console.log("ForgeWidget: writeSnapshot", snapshot.completed, snapshot.total, snapshot.streak);
+452-
+453-      if (NativeModules.WidgetSnapshotModule?.writeSnapshot) {
+454-        await NativeModules.WidgetSnapshotModule.writeSnapshot(
+455-          JSON.stringify(snapshot)
+456-        );
+457-      }
+458-    } catch (e) {
+459-      console.warn('widget snapshot serialization failed:', e);
+460-    }
+461-
+462-  } catch (e) {
+463-    console.warn('refreshWidget failed:', e);
+464-  }
+465-
+466-  }
+467-
+468-  async function setHabitsAndSave(h: Habit[]) {
+469-    setHabits(h);
+470-    await save(KEYS.HABITS, h);
+471-    await refreshWidget(h, logs);
+472-  }
+473-  async function setLogsAndSave(l: HabitLog[]) {
+474-    setLogs(l);
+475-    await save(KEYS.LOGS, l);
+476-    await refreshWidget(habits, l);
+477-  }
+478-  async function setSettingsAndSave(s: AppSettings) {
+479-    console.log("SAVE SETTINGS", s);
+480-    setSettings(s);
+481-    await save(KEYS.SETTINGS, s);
+482-    await refreshWidget(habits, logs, todayTasks, s);
+483-  }
+484-  function setFreezesAndSave(f: StreakFreeze[]) { setFreezes(f); save(KEYS.FREEZES, f); }
+485-
+486-  async function setTodayTasksAndSave(tasks: TodayTask[]) {
+487-    setTodayTasks(tasks);
+488-    await save(KEYS.TODAY_TASKS, tasks);
+489-    await refreshWidget(habits, logs, tasks);
+490-  }
+491-
+492-  async function createHabit(data: Omit<Habit, 'id' | 'createdAt' | 'archived' | 'sortOrder'>) {
+493-    if ((data.priority || 'optional') === PROMISE_PRIORITY && !canCreatePromise()) {
+494-      Alert.alert(
+495-        'Promise limit reached',
+496-        'Complete more Promises to unlock additional Promise slots.'
+497-      );
+498-      return;
+499-    }
+500-
+501-    const h: Habit = {
+502-      ...data,
+503-      priority: data.priority || 'optional',
+504-      id: generateId(),
+505-      createdAt: getTodayStr(),
+506-      archived: false,
+507-      sortOrder: habits.length,
+508-    };
+509-    await setHabitsAndSave([...habits, h]);
+510-
+511-    if (settings.notificationsEnabled) {
+512-      await scheduleRandomHabitReminders(h);
+513-    }
+514-  }
+515-
+516-  async function updateHabit(id: string, updates: Partial<Habit>) {
+517-    const updatedHabit = habits.find(h => h.id === id);
+518-
+519-    if (
+520-      updates.priority === PROMISE_PRIORITY &&
+521-      updatedHabit &&
+522-      updatedHabit.priority !== PROMISE_PRIORITY &&
+523-      !canCreatePromise()
+524-    ) {
+525-      Alert.alert(
+526-        'Promise limit reached',
+527-        'Complete more Promises to unlock additional Promise slots.'
+528-      );
+529-      return;
+530-    }
+531-
+532-    const merged = updatedHabit ? { ...updatedHabit, ...updates } : null;
+533-
+534-    await setHabitsAndSave(
+535-      habits.map(h => h.id === id ? { ...h, ...updates } : h)
+536-    );
+537-
+538-    if (merged) {
+539-      await cancelHabitReminders(id);
+540-      if (!merged.archived && settings.notificationsEnabled) {
+541-        await scheduleRandomHabitReminders(merged);
+542-      }
+543-    }
+544-}
+545-
+546-  async function deleteHabit(id: string) {
+547-    const newHabits = habits.filter(h => h.id !== id);
+548-    const newLogs = logs.filter(l => l.habitId !== id);
+549-
+550-    setHabits(newHabits);
+551-    setLogs(newLogs);
+552-    setFreezesAndSave(freezes.filter(f => f.habitId !== id));
+553-
+554-    await save(KEYS.HABITS, newHabits);
+555-    await save(KEYS.LOGS, newLogs);
+556-
+557-    await refreshWidget(newHabits, newLogs);
+558-    await cancelHabitReminders(id);
+559-  }
+560-
+561-  async function archiveHabit(id: string) { await updateHabit(id, { archived: true }); }
+562-  async function restoreHabit(id: string) { await updateHabit(id, { archived: false }); }
+563-
+564-
+565-
+566-
+567-
+568-
+569-  async function markHabit(habitId: string, date: string) {
+570-    const today = getTodayStr();
+571-    if (date != today) return;
+572-
+573-    const habit = habits.find(h => h.id === habitId);
+574-    if (habit?.subtasks?.length) {
+575-      // Habits with subtasks are completed through subtask toggles.
+576-      return;
+577-    }
+578-    let newLogs: HabitLog[];
+579-    const existing = logs.find(
+580-      l => l.habitId === habitId && l.date === date
+581-    );
+582-    if (existing?.status === 'completed') {
+583-      newLogs = logs.filter(
+584-        l => !(l.habitId === habitId && l.date === date)
+585-      );
+586-    } else {
+587-      newLogs = [
+588-        ...logs,
+589-        {
+590-          id: generateId(),
+591-          habitId,
+592-          date,
+593-          status: 'completed',
+594-          completedAt: new Date().toISOString(),
